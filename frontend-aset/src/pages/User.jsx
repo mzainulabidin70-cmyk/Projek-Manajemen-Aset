@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function User() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -20,8 +22,8 @@ export default function User() {
   // Mengambil daftar barang tersedia dan riwayat pinjaman pengguna.
   const fetchData = async (userId) => {
     const [resA, resL] = await Promise.all([
-      fetch('http://localhost:3000/assets'),
-      fetch('http://localhost:3000/loans'),
+      fetch(`${API_URL}/assets`),
+      fetch(`${API_URL}/loans`),
     ]);
 
     const allAssets = await resA.json();
@@ -53,7 +55,7 @@ export default function User() {
     borrowingLock.current.add(assetId);
     setBorrowingAssets(a => [...a, assetId]);
     try {
-      const res = await fetch('http://localhost:3000/loans', {
+      const res = await fetch(`${API_URL}/loans`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ asset_id: assetId, user_id: user.id })
@@ -75,7 +77,7 @@ export default function User() {
     reportingLock.current.add(loanId);
     setReportingLoans(a => [...a, loanId]);
     try {
-      await fetch(`http://localhost:3000/loans/${loanId}/damage`, {
+      await fetch(`${API_URL}/loans/${loanId}/damage`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ damage_report: note })
@@ -94,7 +96,7 @@ export default function User() {
     deletingLock.current.add(loanId);
     setDeletingLoans(a => [...a, loanId]);
     try {
-      const res = await fetch(`http://localhost:3000/loans/${loanId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/loans/${loanId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
       await fetchData(user.id);
       setLoanToCancel(null);

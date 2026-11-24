@@ -13,6 +13,10 @@ app.get('/', (req, res) => {
   res.send('Server Manajemen Aset V2 Berjalan!');
 });
 
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const { data, error } = await supabase
@@ -253,6 +257,9 @@ app.put('/loans/:id/damage', async (req, res) => {
   res.json({ message: 'Laporan kerusakan terkirim' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server Manajemen Aset berjalan di http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;

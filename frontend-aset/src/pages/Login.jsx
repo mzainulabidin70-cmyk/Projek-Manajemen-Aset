@@ -13,27 +13,31 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    const res = await fetch('http://localhost:3000/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setError(data.message || 'Email atau password salah');
-      return;
-    }
+      if (!res.ok) {
+        setError(data.message || 'Email atau password salah');
+        return;
+      }
 
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setEmail('');
-    setPassword('');
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setEmail('');
+      setPassword('');
 
-    if (data.user.role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/user');
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/user');
+      }
+    } catch (err) {
+      setError('Gagal terhubung ke server');
     }
   };
 

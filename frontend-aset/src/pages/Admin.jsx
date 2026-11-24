@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Mengirim permintaan ke server. Data otomatis diubah menjadi JSON.
 async function request(path, method = 'GET', data) {
