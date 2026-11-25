@@ -171,7 +171,12 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
       <aside className="flex w-full shrink-0 flex-col bg-blue-800 text-white print:hidden md:min-h-screen md:w-64">
-        <h1 className="border-b border-white px-4 py-3 text-lg font-bold md:p-5 md:text-xl">Dashboard Admin</h1>
+        <h1 className="flex items-center justify-between border-b border-white px-4 py-3 text-lg font-bold md:block md:p-5 md:text-xl">
+          Dashboard Admin
+          <button onClick={logout} className="rounded bg-red-500 px-3 py-1.5 text-xs font-medium hover:bg-red-600 md:hidden">
+            Keluar
+          </button>
+        </h1>
         <nav className="grid grid-cols-2 gap-2 p-3 md:block md:flex-1 md:space-y-1 md:p-3" aria-label="Menu admin">
           {[
             { id: 'assets', label: 'Daftar Barang' },
@@ -190,7 +195,7 @@ export default function Admin() {
             </button>
           ))}
         </nav>
-        <button onClick={logout} className="mx-3 mb-3 mt-0 rounded bg-red-500 px-4 py-2 text-sm hover:bg-red-600 md:m-3">
+        <button onClick={logout} className="mx-3 mb-3 mt-0 hidden rounded bg-red-500 px-4 py-2 text-sm hover:bg-red-600 md:m-3 md:block">
           Keluar
         </button>
       </aside>
