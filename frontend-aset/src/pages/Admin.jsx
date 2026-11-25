@@ -169,10 +169,10 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      <aside className="w-64 shrink-0 bg-blue-800 text-white flex flex-col print:hidden">
-        <h1 className="p-5 text-xl font-bold border-b border-white">Dashboard Admin</h1>
-        <nav className="flex-1 p-3 space-y-1">
+    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+      <aside className="flex w-full shrink-0 flex-col bg-blue-800 text-white print:hidden md:min-h-screen md:w-64">
+        <h1 className="border-b border-white px-4 py-3 text-lg font-bold md:p-5 md:text-xl">Dashboard Admin</h1>
+        <nav className="grid grid-cols-2 gap-2 p-3 md:block md:flex-1 md:space-y-1 md:p-3" aria-label="Menu admin">
           {[
             { id: 'assets', label: 'Daftar Barang' },
             { id: 'master', label: 'Data Awal' },
@@ -182,7 +182,7 @@ export default function Admin() {
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
-              className={`w-full rounded px-4 py-3 text-left font-medium ${
+              className={`min-h-12 w-full rounded px-3 py-2.5 text-left text-xs font-medium leading-snug sm:text-sm md:min-h-0 md:px-4 md:py-3 md:text-base ${
                 tab === item.id ? 'bg-blue-600 text-white' : 'text-blue-100 hover:bg-blue-700 hover:text-white'
               }`}
             >
@@ -190,34 +190,34 @@ export default function Admin() {
             </button>
           ))}
         </nav>
-        <button onClick={logout} className="m-3 rounded bg-red-500 px-4 py-2 text-sm hover:bg-red-600">
+        <button onClick={logout} className="mx-3 mb-3 mt-0 rounded bg-red-500 px-4 py-2 text-sm hover:bg-red-600 md:m-3">
           Keluar
         </button>
       </aside>
 
       <main className="min-w-0 flex-1 bg-slate-50">
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="mx-auto w-full max-w-6xl p-3 sm:p-5 md:p-6">
         {tab === 'assets' && (
           <div className="space-y-6">
-            <header className="border border-slate-300 bg-white px-5 py-5">
+            <header className="border border-slate-300 bg-white px-4 py-4 sm:px-5 sm:py-5">
               <p className="text-sm font-medium text-blue-700">Inventaris sekolah</p>
-              <div className="mt-1 flex items-end justify-between gap-4">
+              <div className="mt-1 flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Daftar Barang</h2>
-                  <p className="mt-1 text-sm text-slate-500">Kelola data aset beserta jenis, lokasi, dan kondisinya.</p>
+                  <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Daftar Barang</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">Kelola data aset beserta jenis, lokasi, dan kondisinya.</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
                   <div className="hidden border-l-2 border-blue-600 pl-4 text-right sm:block">
                     <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Total barang</p>
                     <p className="text-2xl font-bold text-slate-900">{assets.length}</p>
                   </div>
-                  <button type="button" onClick={() => { resetForm(); setShowAssetModal(true); }} className="border border-blue-700 bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800">Tambah Barang</button>
+                  <button type="button" onClick={() => { resetForm(); setShowAssetModal(true); }} className="border border-blue-700 bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 sm:px-5">Tambah Barang</button>
                 </div>
               </div>
             </header>
 
             <section className="border border-slate-300 bg-white">
-              <div className="flex items-center justify-between border-b border-slate-300 px-5 py-4">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-300 px-4 py-4 sm:px-5">
                 <div>
                   <h3 className="font-bold text-slate-800">Data aset</h3>
                   <p className="mt-1 text-sm text-slate-500">Menampilkan seluruh barang yang terdaftar.</p>
@@ -225,7 +225,7 @@ export default function Admin() {
                 <span className="border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">{assets.length} data</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left">
+                <table className="w-full min-w-[650px] border-collapse text-left">
                   <thead className="border-b border-slate-300 bg-slate-100 text-xs uppercase tracking-wide text-slate-600">
                     <tr>
                       <th className="border-r border-slate-200 px-5 py-3 font-semibold">Nama Barang</th>
@@ -276,19 +276,19 @@ export default function Admin() {
 
         {tab === 'master' && (
           <div className="space-y-6">
-            <header className="border border-slate-300 bg-white p-5">
+            <header className="border border-slate-300 bg-white p-4 sm:p-5">
               <p className="text-sm font-medium text-blue-700">Pengaturan inventaris</p>
               <h2 className="mt-1 text-2xl font-bold text-slate-900">Data Awal</h2>
               <p className="mt-2 text-sm text-slate-600">Pilih satu menu untuk mengelola data inventaris.</p>
             </header>
 
-            <nav className="flex flex-wrap gap-2 border-b border-slate-300" aria-label="Menu Data Awal">
+            <nav className="flex min-w-0 gap-2 overflow-x-auto border-b border-slate-300 md:flex-wrap md:overflow-visible" aria-label="Menu Data Awal">
               {[
                 { id: 'categories', label: 'Jenis Barang' },
                 { id: 'rooms', label: 'Daftar Ruangan' },
                 { id: 'users', label: 'Buat Akun Peminjam' },
               ].map((item) => (
-                <button key={item.id} onClick={() => setMasterTab(item.id)} className={`border-b-2 px-4 py-3 text-sm font-semibold transition ${masterTab === item.id ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                <button key={item.id} onClick={() => setMasterTab(item.id)} className={`shrink-0 border-b-2 px-3 py-3 text-left text-xs font-semibold transition sm:text-sm md:px-4 ${masterTab === item.id ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
                   {item.label}
                 </button>
               ))}
@@ -296,15 +296,15 @@ export default function Admin() {
 
             {masterTab === 'categories' && (
               <section className="border border-slate-300 bg-white">
-                <div className="flex items-center justify-between border-b border-slate-300 px-5 py-4">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-300 px-4 py-4 sm:px-5">
                   <div><p className="text-xs font-medium text-blue-700">Master barang</p><h3 className="mt-1 text-lg font-bold text-slate-800">Jenis Barang</h3></div>
                   <span className="bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{categories.length} data</span>
                 </div>
-                <div className="space-y-4 p-5">
+                <div className="space-y-4 p-4 sm:p-5">
                   <form onSubmit={addCategory} className="flex flex-col gap-2 sm:flex-row">
                     <input required placeholder="Contoh: Buku" value={newCat} onChange={(e) => setNewCat(e.target.value)} className="min-w-0 flex-1 border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
-                    <button className="bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">{editCategoryId ? 'Simpan Perubahan' : 'Tambah Jenis'}</button>
-                    {editCategoryId && <button type="button" onClick={() => { setEditCategoryId(null); setNewCat(''); }} className="border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100">Batal</button>}
+                    <button className="w-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 sm:w-auto">{editCategoryId ? 'Simpan Perubahan' : 'Tambah Jenis'}</button>
+                    {editCategoryId && <button type="button" onClick={() => { setEditCategoryId(null); setNewCat(''); }} className="w-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto">Batal</button>}
                   </form>
                   <ul className="divide-y divide-slate-200 border-y border-slate-200">
                     {categories.length ? categories.map((c) => (
@@ -323,15 +323,15 @@ export default function Admin() {
 
             {masterTab === 'rooms' && (
               <section className="border border-slate-300 bg-white">
-                <div className="flex items-center justify-between border-b border-slate-300 px-5 py-4">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-300 px-4 py-4 sm:px-5">
                   <div><p className="text-xs font-medium text-blue-700">Lokasi aset</p><h3 className="mt-1 text-lg font-bold text-slate-800">Daftar Ruangan</h3></div>
                   <span className="bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{rooms.length} data</span>
                 </div>
-                <div className="space-y-4 p-5">
+                <div className="space-y-4 p-4 sm:p-5">
                   <form onSubmit={addRoom} className="flex flex-col gap-2 sm:flex-row">
                     <input required placeholder="Contoh: Ruang kelas 1" value={newRoom} onChange={(e) => setNewRoom(e.target.value)} className="min-w-0 flex-1 border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
-                    <button className="bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">{editRoomId ? 'Simpan Perubahan' : 'Tambah Ruangan'}</button>
-                    {editRoomId && <button type="button" onClick={() => { setEditRoomId(null); setNewRoom(''); }} className="border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100">Batal</button>}
+                    <button className="w-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 sm:w-auto">{editRoomId ? 'Simpan Perubahan' : 'Tambah Ruangan'}</button>
+                    {editRoomId && <button type="button" onClick={() => { setEditRoomId(null); setNewRoom(''); }} className="w-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto">Batal</button>}
                   </form>
                   <ul className="divide-y divide-slate-200 border-y border-slate-200">
                     {rooms.length ? rooms.map((r) => (
@@ -349,17 +349,17 @@ export default function Admin() {
             )}
 
             {masterTab === 'users' && (
-              <section className="max-w-2xl border border-slate-300 bg-white">
-                <div className="border-b border-slate-300 p-5">
+              <section className="w-full max-w-2xl border border-slate-300 bg-white">
+                <div className="border-b border-slate-300 p-4 sm:p-5">
                   <p className="text-xs font-medium text-blue-700">Akses pengguna</p>
                   <h3 className="mt-1 text-lg font-bold text-slate-800">Buat Akun Peminjam</h3>
                   <p className="mt-1 text-sm text-slate-500">Tambahkan akun untuk siswa atau siswi.</p>
                 </div>
-                <form onSubmit={addUser} className="space-y-3 p-5">
+                <form onSubmit={addUser} className="space-y-3 p-4 sm:p-5">
                   <input required placeholder="Nama Siswa/Siswi" value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
                   <input required type="email" placeholder="Email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
                   <input required placeholder="Password" value={userPass} onChange={(e) => setUserPass(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
-                  <button className="bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">Simpan Akun</button>
+                  <button className="w-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 sm:w-auto">Simpan Akun</button>
                 </form>
               </section>
             )}
@@ -368,12 +368,12 @@ export default function Admin() {
 
         {tab === 'loans' && (
           <div className="space-y-6">
-            <header className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <header className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
               <p className="text-sm font-medium text-slate-500">Peminjaman barang</p>
               <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Peminjaman &amp; Pengembalian</h2>
-                  <p className="mt-1 text-sm text-slate-500">Setujui permintaan peminjaman, lalu catat kondisi barang saat dikembalikan.</p>
+                  <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Peminjaman &amp; Pengembalian</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">Setujui permintaan peminjaman, lalu catat kondisi barang saat dikembalikan.</p>
                 </div>
                 <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
                   {loans.filter((l) => l.status !== 'Dikembalikan').length} transaksi aktif
@@ -381,7 +381,7 @@ export default function Admin() {
               </div>
             </header>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 sm:gap-4">
               {[
                 { label: 'Menunggu persetujuan', count: loans.filter((l) => l.status === 'Menunggu').length, style: 'border-amber-200 bg-amber-50 text-amber-800', marker: 'bg-amber-500' },
                 { label: 'Sedang dipinjam', count: loans.filter((l) => l.status === 'Disetujui').length, style: 'border-blue-200 bg-blue-50 text-blue-800', marker: 'bg-blue-500' },
@@ -403,7 +403,7 @@ export default function Admin() {
                 <p className="mt-1 text-sm text-slate-500">Permintaan yang belum disetujui dan barang yang masih dipinjam.</p>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full min-w-[700px] text-left">
                   <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-5 py-3 font-semibold">Peminjam</th>
@@ -461,12 +461,12 @@ export default function Admin() {
 
         {tab === 'report' && (
           <div className="space-y-6">
-            <header className="rounded-xl border border-slate-200 bg-white px-5 py-5 shadow-sm print:border-0 print:shadow-none">
+            <header className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-5 sm:py-5 print:border-0 print:shadow-none">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-medium text-blue-700">Rekapitulasi inventaris</p>
-                  <h2 className="mt-1 text-2xl font-bold text-slate-900">Laporan Riwayat Peminjaman Aset</h2>
-                  <p className="mt-1 text-sm text-slate-500">Ringkasan seluruh transaksi peminjaman dan pengembalian aset.</p>
+                  <h2 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">Laporan Riwayat Peminjaman Aset</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">Ringkasan seluruh transaksi peminjaman dan pengembalian aset.</p>
                 </div>
                 <button onClick={() => window.print()} className="w-fit rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-900 print:hidden">
                   Cetak Laporan
@@ -474,14 +474,14 @@ export default function Admin() {
               </div>
             </header>
 
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 min-[420px]:gap-3 sm:gap-4 lg:grid-cols-4">
               {[
                 { label: 'Total transaksi', count: loans.length, style: 'border-slate-200 bg-white text-slate-800', marker: 'bg-slate-500' },
                 { label: 'Menunggu', count: loans.filter((l) => l.status === 'Menunggu').length, style: 'border-amber-200 bg-amber-50 text-amber-800', marker: 'bg-amber-500' },
                 { label: 'Sedang dipinjam', count: loans.filter((l) => l.status === 'Disetujui').length, style: 'border-blue-200 bg-blue-50 text-blue-800', marker: 'bg-blue-500' },
                 { label: 'Dikembalikan', count: loans.filter((l) => l.status === 'Dikembalikan').length, style: 'border-emerald-200 bg-emerald-50 text-emerald-800', marker: 'bg-emerald-500' },
               ].map((item) => (
-                <div key={item.label} className={`rounded-xl border p-4 ${item.style}`}>
+                <div key={item.label} className={`rounded-xl border p-3 sm:p-4 ${item.style}`}>
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium">{item.label}</p>
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${item.marker}`} />
@@ -499,7 +499,7 @@ export default function Admin() {
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full min-w-[720px] text-left">
                   <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-5 py-3 font-semibold">Nama Peminjam</th>
@@ -542,8 +542,8 @@ export default function Admin() {
       </main>
 
       {showAssetModal && (
-        <div onClick={() => { setShowAssetModal(false); resetForm(); }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <section onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl border border-slate-300 bg-white shadow-xl">
+        <div onClick={() => { setShowAssetModal(false); resetForm(); }} className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 p-3 sm:items-center sm:p-4">
+            <section onClick={(e) => e.stopPropagation()} className="my-auto w-full max-w-2xl border border-slate-300 bg-white shadow-xl">
             <div className="flex items-start justify-between border-b border-slate-300 px-5 py-4">
               <div>
                 <h3 className="font-bold text-slate-800">{editId ? 'Ubah Data Barang' : 'Tambah Barang Baru'}</h3>
@@ -551,7 +551,7 @@ export default function Admin() {
               </div>
               <button type="button" aria-label="Tutup" onClick={() => { setShowAssetModal(false); resetForm(); }} className="text-xl leading-none text-slate-500 hover:text-slate-800">&times;</button>
             </div>
-            <form onSubmit={handleSaveAsset} className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+            <form onSubmit={handleSaveAsset} className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
               <label className="block">
                 <span className="mb-1.5 block text-sm font-medium text-slate-700">Nama Barang</span>
                 <input required placeholder="Contoh: Buku ...." value={name} onChange={(e) => setName(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
@@ -577,9 +577,9 @@ export default function Admin() {
                   <option value="Rusak">Rusak</option>
                 </select>
               </label>
-              <div className="flex justify-end gap-2 sm:col-span-2">
-                <button type="button" onClick={() => { setShowAssetModal(false); resetForm(); }} className="border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">Batal</button>
-                <button type="submit" className="border border-blue-700 bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800">{editId ? 'Simpan Perubahan' : 'Tambah Barang'}</button>
+              <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => { setShowAssetModal(false); resetForm(); }} className="w-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:w-auto">Batal</button>
+                <button type="submit" className="w-full border border-blue-700 bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 sm:w-auto">{editId ? 'Simpan Perubahan' : 'Tambah Barang'}</button>
               </div>
             </form>
           </section>

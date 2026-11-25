@@ -42,7 +42,7 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4 sm:p-5">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-3 sm:p-5">
       <img
         src={sawah}
         alt=""
@@ -50,10 +50,10 @@ export default function Login() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-blue-950/55" aria-hidden="true" />
-      <div className="relative z-10 grid min-h-0 w-full max-w-[1100px] translate-x-0 grid-cols-1 overflow-hidden rounded-xl border border-white/70 bg-white shadow-2xl md:min-h-[580px] md:-translate-x-4 md:grid-cols-[46%_54%] md:rounded-none">
-        <section className="relative flex min-h-[170px] flex-col items-center justify-center overflow-hidden bg-blue-700 p-6 text-center text-white/90 sm:min-h-[220px] sm:p-10 md:min-h-[580px]">
+      <div className="relative z-10 grid min-h-0 w-full max-w-[480px] translate-x-0 grid-cols-1 overflow-hidden rounded-xl border border-white/70 bg-white shadow-2xl md:max-w-[1100px] md:min-h-[580px] md:-translate-x-4 md:grid-cols-[46%_54%] md:rounded-none">
+        <section className="relative flex min-h-[220px] flex-col items-center justify-center overflow-hidden bg-blue-700 px-5 pb-7 pt-24 text-center text-white/90 sm:min-h-[240px] md:min-h-[580px] md:p-10">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-blue-700/15 to-sky-400/10" aria-hidden="true" />
-          <div className="absolute left-4 top-4 z-10 flex items-center gap-3 sm:left-8 sm:top-8">
+          <div className="absolute left-1/2 top-5 z-10 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap md:left-8 md:top-8 md:translate-x-0">
             <img src={logo} alt="Logo SMK Guna Cipta" className="h-10 w-10 rounded-none object-cover sm:h-12 sm:w-12" />
             <span className="text-left text-sm font-bold tracking-wide sm:text-lg">SMK GUNA CIPTA</span>
           </div>
