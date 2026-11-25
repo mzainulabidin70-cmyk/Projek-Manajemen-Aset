@@ -23,6 +23,9 @@ export default function Admin() {
   const [rooms, setRooms] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loans, setLoans] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [usersError, setUsersError] = useState('');
+  const [userFormError, setUserFormError] = useState('');
   const [editId, setEditId] = useState(null);
   const [showAssetModal, setShowAssetModal] = useState(false);
   const [name, setName] = useState('');
@@ -38,18 +41,42 @@ export default function Admin() {
   const [userPass, setUserPass] = useState('');
   const [createdUserName, setCreatedUserName] = useState('');
   const [createdAssetName, setCreatedAssetName] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [assetSearch, setAssetSearch] = useState('');
+  const [conditionFilter, setConditionFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const fetchData = async () => {
-    const [resA, resC, resR, resL] = await Promise.all([
+    const [resA, resC, resR, resL, resU] = await Promise.all([
       request('/assets'),
       request('/categories'),
       request('/rooms'),
       request('/loans'),
+      request('/users'),
     ]);
     setAssets(await resA.json());
     setCategories(await resC.json());
     setRooms(await resR.json());
     setLoans(await resL.json());
+    if (resU.ok) {
+      try {
+        const userData = await resU.json();
+        const userList = Array.isArray(userData) ? userData : userData.users || userData.data;
+        if (Array.isArray(userList)) {
+          setUsers(userList);
+          setUsersError('');
+        } else {
+          setUsers([]);
+          setUsersError('Respons endpoint /users bukan berupa daftar akun. Periksa format data dari backend.');
+        }
+      } catch {
+        setUsers([]);
+        setUsersError('Data dari endpoint /users tidak dapat dibaca. Periksa backend.');
+      }
+    } else {
+      setUsers([]);
+      setUsersError(`Gagal memuat akun (HTTP ${resU.status}). Pastikan backend menyediakan GET /users.`);
+    }
   };
 
   useEffect(() => {
@@ -58,6 +85,7 @@ export default function Admin() {
       navigate('/');
       return;
     }
+    setCurrentUser(user);
     fetchData();
   }, []);
 
@@ -135,17 +163,22 @@ export default function Admin() {
 
   const addUser = async (e) => {
     e.preventDefault();
+    setUserFormError('');
     const response = await request('/users', 'POST', {
       name: userName,
       email: userEmail,
       password: userPass,
       role: 'user',
     });
-    if (!response.ok) return;
+    if (!response.ok) {
+      setUserFormError(`Akun gagal disimpan (HTTP ${response.status}). Periksa endpoint POST /users di backend.`);
+      return;
+    }
     setCreatedUserName(userName);
     setUserName('');
     setUserEmail('');
     setUserPass('');
+    await fetchData();
   };
 
   const handleCheckout = async (loan) => {
@@ -163,35 +196,69 @@ export default function Admin() {
     fetchData();
   };
 
+  const filteredAssets = assets.filter((asset) => {
+    const query = assetSearch.trim().toLocaleLowerCase('id-ID');
+    const matchesQuery = !query || [asset.name, asset.category_name, asset.room_name]
+      .some((value) => String(value || '').toLocaleLowerCase('id-ID').includes(query));
+    return matchesQuery
+      && (!conditionFilter || asset.condition === conditionFilter)
+      && (!statusFilter || asset.status === statusFilter);
+  });
+
   const logout = () => {
     localStorage.removeItem('user');
     navigate('/');
   };
 
+  const borrowerUsers = users.filter((user) => ['user', 'peminjam', 'siswa', 'borrower'].includes(String(user.role || '').toLowerCase()));
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
       <aside className="flex w-full shrink-0 flex-col bg-blue-800 text-white print:hidden md:min-h-screen md:w-64">
         <h1 className="flex items-center justify-between border-b border-white px-4 py-3 text-lg font-bold md:block md:p-5 md:text-xl">
-          Dashboard Admin
+          Dashboard
           <button onClick={logout} className="rounded bg-red-500 px-3 py-1.5 text-xs font-medium hover:bg-red-600 md:hidden">
             Keluar
           </button>
         </h1>
+        {currentUser && (
+          <div className="border-b border-blue-700 px-4 py-3 text-sm md:px-5">
+            <p className="font-semibold">{currentUser.name || currentUser.email}</p>
+            <p className="mt-0.5 text-xs text-blue-200">Masuk sebagai {currentUser.role === 'guru' ? 'Guru' : currentUser.role === 'admin' ? 'Admin' : 'Pengguna'}</p>
+          </div>
+        )}
         <nav className="grid grid-cols-2 gap-2 p-3 md:block md:flex-1 md:space-y-1 md:p-3" aria-label="Menu admin">
           {[
-            { id: 'assets', label: 'Daftar Barang' },
-            { id: 'master', label: 'Data Awal' },
-            { id: 'loans', label: 'Peminjaman & Pengembalian' },
-            { id: 'report', label: 'Laporan' },
+            {
+              id: 'assets',
+              label: 'Data Barang',
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" /><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 7.5 7.5 4.2 7.5-4.2M12 12v9" /></svg>,
+            },
+            {
+              id: 'master',
+              label: 'Master Data',
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M8 4h8l3 3v13H5V4h3Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M8 4v4h8V4M8 12h8M8 16h5" /></svg>,
+            },
+            {
+              id: 'loans',
+              label: 'Transaksi',
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h12l-3-3M17 17H5l3 3M19 7a7 7 0 0 1 1 8M5 17a7 7 0 0 1-1-8" /></svg>,
+            },
+            {
+              id: 'report',
+              label: 'Laporan',
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M4 20V4m0 16h16M8 16v-5m5 5V7m5 9v-8" /></svg>,
+            },
           ].map((item) => (
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
-              className={`min-h-12 w-full rounded px-3 py-2.5 text-left text-xs font-medium leading-snug sm:text-sm md:min-h-0 md:px-4 md:py-3 md:text-base ${
+              className={`flex min-h-12 w-full items-center gap-3 rounded px-3 py-2.5 text-left text-xs font-medium leading-snug sm:text-sm md:min-h-0 md:px-4 md:py-3 md:text-base ${
                 tab === item.id ? 'bg-blue-600 text-white' : 'text-blue-100 hover:bg-blue-700 hover:text-white'
               }`}
             >
-              {item.label}
+              {item.icon}
+              <span>{item.label}</span>
             </button>
           ))}
         </nav>
@@ -221,16 +288,43 @@ export default function Admin() {
               </div>
             </header>
 
+            <section className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Ringkasan kondisi inventaris">
+              {[
+                { label: 'Total aset', count: assets.length, style: 'border-blue-200 bg-blue-50 text-blue-900' },
+                { label: 'Kondisi bagus', count: assets.filter((a) => a.condition === 'Bagus').length, style: 'border-emerald-200 bg-emerald-50 text-emerald-900' },
+                { label: 'Perlu diperiksa', count: assets.filter((a) => a.condition === 'Rusak').length, style: 'border-amber-200 bg-amber-50 text-amber-900' },
+                { label: 'Sedang dipinjam', count: assets.filter((a) => a.status && !['Tersedia', 'Dikembalikan'].includes(a.status)).length, style: 'border-violet-200 bg-violet-50 text-violet-900' },
+              ].map((item) => (
+                <div key={item.label} className={`border p-4 ${item.style}`}>
+                  <p className="text-xs font-medium sm:text-sm">{item.label}</p>
+                  <p className="mt-1 text-2xl font-bold">{item.count}</p>
+                </div>
+              ))}
+            </section>
+
             <section className="border border-slate-300 bg-white">
               <div className="flex items-center justify-between gap-3 border-b border-slate-300 px-4 py-4 sm:px-5">
                 <div>
                   <h3 className="font-bold text-slate-800">Data aset</h3>
-                  <p className="mt-1 text-sm text-slate-500">Menampilkan seluruh barang yang terdaftar.</p>
+                  <p className="mt-1 text-sm text-slate-500">Cari aset berdasarkan nama, jenis, atau ruangan; gunakan filter untuk pemeriksaan inventaris.</p>
                 </div>
-                <span className="border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">{assets.length} data</span>
+                <span className="border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">{filteredAssets.length} dari {assets.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 border-b border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                <input aria-label="Cari aset" value={assetSearch} onChange={(e) => setAssetSearch(e.target.value)} placeholder="Cari nama, jenis, ruangan..." className="min-w-0 border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 sm:col-span-2" />
+                <select aria-label="Filter kondisi" value={conditionFilter} onChange={(e) => setConditionFilter(e.target.value)} className="border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
+                  <option value="">Semua kondisi</option>
+                  {[...new Set(assets.map((asset) => asset.condition).filter(Boolean))].map((value) => <option key={value} value={value}>{value}</option>)}
+                </select>
+                <div className="flex gap-2">
+                  <select aria-label="Filter status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-w-0 flex-1 border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
+                    <option value="">Semua status</option>
+                    {[...new Set(assets.map((asset) => asset.status).filter(Boolean))].map((value) => <option key={value} value={value}>{value}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[650px] border-collapse text-left">
+                <table className="w-full min-w-[760px] border-collapse text-left">
                   <thead className="border-b border-slate-300 bg-slate-100 text-xs uppercase tracking-wide text-slate-600">
                     <tr>
                       <th className="border-r border-slate-200 px-5 py-3 font-semibold">Nama Barang</th>
@@ -238,11 +332,12 @@ export default function Admin() {
                       <th className="border-r border-slate-200 px-5 py-3 font-semibold">Ruangan</th>
                       <th className="border-r border-slate-200 px-5 py-3 font-semibold">Kondisi</th>
                       <th className="border-r border-slate-200 px-5 py-3 font-semibold">Status</th>
+                      <th className="border-r border-slate-200 px-5 py-3 font-semibold">Dipinjam oleh</th>
                       <th className="px-5 py-3 font-semibold">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {assets.length ? assets.map((a) => (
+                    {filteredAssets.length ? filteredAssets.map((a) => (
                       <tr key={a.id} className="text-sm transition hover:bg-blue-50/40">
                         <td className="border-r border-slate-200 px-5 py-4 font-semibold text-slate-800">{a.name}</td>
                         <td className="border-r border-slate-200 px-5 py-4 text-slate-600">{a.category_name || '-'}</td>
@@ -257,6 +352,9 @@ export default function Admin() {
                             {a.status}
                           </span>
                         </td>
+                        <td className="border-r border-slate-200 px-5 py-4 text-slate-600">
+                          {loans.find((loan) => String(loan.asset_id) === String(a.id) && loan.status === 'Disetujui')?.user_name || '-'}
+                        </td>
                         <td className="px-5 py-4">
                           <div className="flex min-w-max gap-2">
                             <button onClick={() => handleEditAsset(a)} className="border border-amber-500 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-600">Edit</button>
@@ -266,9 +364,9 @@ export default function Admin() {
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="6" className="px-5 py-12 text-center">
-                          <p className="font-semibold text-slate-700">Belum ada barang terdaftar</p>
-                          <p className="mt-1 text-sm text-slate-500">Gunakan formulir di atas untuk menambah barang.</p>
+                        <td colSpan="7" className="px-5 py-12 text-center">
+                          <p className="font-semibold text-slate-700">{assets.length ? 'Aset tidak ditemukan' : 'Belum ada barang terdaftar'}</p>
+                          <p className="mt-1 text-sm text-slate-500">{assets.length ? 'Coba ubah kata kunci atau reset filter.' : 'Gunakan tombol Tambah Barang untuk mulai mencatat inventaris sekolah.'}</p>
                         </td>
                       </tr>
                     )}
@@ -311,17 +409,17 @@ export default function Admin() {
                     <button className="w-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 sm:w-auto">{editCategoryId ? 'Simpan Perubahan' : 'Tambah Jenis'}</button>
                     {editCategoryId && <button type="button" onClick={() => { setEditCategoryId(null); setNewCat(''); }} className="w-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto">Batal</button>}
                   </form>
-                  <ul className="divide-y divide-slate-200 border-y border-slate-200">
-                    {categories.length ? categories.map((c) => (
-                      <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm text-slate-700">
-                        <span className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-blue-500" />{c.name}</span>
-                        <div className="flex gap-2">
-                          <button onClick={() => { setEditCategoryId(c.id); setNewCat(c.name); }} className="border border-amber-500 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Ubah</button>
-                          <button onClick={() => deleteCategory(c.id)} className="border border-red-600 bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">Hapus</button>
-                        </div>
-                      </li>
-                    )) : <li className="py-8 text-center text-sm text-slate-400">Belum ada jenis barang.</li>}
-                  </ul>
+                  <div className="overflow-x-auto border-y border-slate-200">
+                    <table className="w-full min-w-[520px] text-left text-sm">
+                      <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Jenis Barang</th><th className="px-3 py-2">Jumlah</th><th className="px-3 py-2">Nama Barang</th><th className="px-3 py-2">Aksi</th></tr></thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {categories.length ? categories.map((c) => {
+                          const categoryAssets = assets.filter((a) => String(a.category_id) === String(c.id));
+                          return <tr key={c.id} className="text-slate-700"><td className="px-3 py-3 font-semibold">{c.name}</td><td className="px-3 py-3">{categoryAssets.length} barang</td><td className="px-3 py-3">{categoryAssets.length ? categoryAssets.map((a) => a.name).join(', ') : <span className="text-slate-400">Belum ada barang</span>}</td><td className="px-3 py-3"><div className="flex gap-2"><button onClick={() => { setEditCategoryId(c.id); setNewCat(c.name); }} className="border border-amber-500 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Ubah</button><button onClick={() => deleteCategory(c.id)} className="border border-red-600 bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">Hapus</button></div></td></tr>;
+                        }) : <tr><td colSpan="4" className="py-8 text-center text-slate-400">Belum ada jenis barang.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </section>
             )}
@@ -338,17 +436,17 @@ export default function Admin() {
                     <button className="w-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 sm:w-auto">{editRoomId ? 'Simpan Perubahan' : 'Tambah Ruangan'}</button>
                     {editRoomId && <button type="button" onClick={() => { setEditRoomId(null); setNewRoom(''); }} className="w-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto">Batal</button>}
                   </form>
-                  <ul className="divide-y divide-slate-200 border-y border-slate-200">
-                    {rooms.length ? rooms.map((r) => (
-                      <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm text-slate-700">
-                        <span className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-blue-500" />{r.name}</span>
-                        <div className="flex gap-2">
-                          <button onClick={() => { setEditRoomId(r.id); setNewRoom(r.name); }} className="border border-amber-500 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Ubah</button>
-                          <button onClick={() => deleteRoom(r.id)} className="border border-red-600 bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">Hapus</button>
-                        </div>
-                      </li>
-                    )) : <li className="py-8 text-center text-sm text-slate-400">Belum ada ruangan.</li>}
-                  </ul>
+                  <div className="overflow-x-auto border-y border-slate-200">
+                    <table className="w-full min-w-[520px] text-left text-sm">
+                      <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Ruangan</th><th className="px-3 py-2">Jumlah</th><th className="px-3 py-2">Nama Barang</th><th className="px-3 py-2">Aksi</th></tr></thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {rooms.length ? rooms.map((r) => {
+                          const roomAssets = assets.filter((a) => String(a.room_id) === String(r.id));
+                          return <tr key={r.id} className="text-slate-700"><td className="px-3 py-3 font-semibold">{r.name}</td><td className="px-3 py-3">{roomAssets.length} barang</td><td className="px-3 py-3">{roomAssets.length ? roomAssets.map((a) => a.name).join(', ') : <span className="text-slate-400">Belum ada barang</span>}</td><td className="px-3 py-3"><div className="flex gap-2"><button onClick={() => { setEditRoomId(r.id); setNewRoom(r.name); }} className="border border-amber-500 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Ubah</button><button onClick={() => deleteRoom(r.id)} className="border border-red-600 bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">Hapus</button></div></td></tr>;
+                        }) : <tr><td colSpan="4" className="py-8 text-center text-slate-400">Belum ada ruangan.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </section>
             )}
@@ -358,14 +456,27 @@ export default function Admin() {
                 <div className="border-b border-slate-300 p-4 sm:p-5">
                   <p className="text-xs font-medium text-blue-700">Akses pengguna</p>
                   <h3 className="mt-1 text-lg font-bold text-slate-800">Buat Akun Peminjam</h3>
-                  <p className="mt-1 text-sm text-slate-500">Tambahkan akun untuk siswa atau siswi.</p>
+                  <p className="mt-1 text-sm text-slate-500">Isi nama, email, dan password lalu pilih Simpan Akun. Bagikan email dan password kepada siswa agar mereka bisa masuk dan mengajukan peminjaman.</p>
                 </div>
                 <form onSubmit={addUser} className="space-y-3 p-4 sm:p-5">
                   <input required placeholder="Nama Siswa/Siswi" value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
                   <input required type="email" placeholder="Email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
-                  <input required placeholder="Password" value={userPass} onChange={(e) => setUserPass(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+                  <input required type="password" placeholder="Password" value={userPass} onChange={(e) => setUserPass(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
                   <button className="w-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 sm:w-auto">Simpan Akun</button>
                 </form>
+                <div className="border-t border-slate-200 p-4 sm:p-5">
+                  <div className="mb-3 flex items-center justify-between gap-3"><h4 className="font-semibold text-slate-800">Daftar akun peminjam</h4><span className="bg-slate-100 px-3 py-1 text-sm text-slate-700">{borrowerUsers.length} akun</span></div>
+                  {userFormError && <p role="alert" className="mb-3 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{userFormError}</p>}
+                  {usersError && <p role="alert" className="mb-3 border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">{usersError}</p>}
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[420px] text-left text-sm">
+                      <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Nama</th><th className="px-3 py-2">Email</th><th className="px-3 py-2">Peran</th></tr></thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {borrowerUsers.length ? borrowerUsers.map((u) => <tr key={u.id} className="text-slate-700"><td className="px-3 py-3 font-medium">{u.name || '-'}</td><td className="px-3 py-3">{u.email || '-'}</td><td className="px-3 py-3">Peminjam</td></tr>) : <tr><td colSpan="3" className="py-8 text-center text-slate-400">{usersError ? 'Daftar akun tidak dapat dimuat. Lihat pesan di atas.' : 'Belum ada akun. Buat akun lewat formulir di atas; setelah disimpan, akun akan muncul di daftar ini.'}</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </section>
             )}
           </div>
