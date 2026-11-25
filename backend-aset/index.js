@@ -49,6 +49,33 @@ app.post('/categories', async (req, res) => {
   res.json(data);
 });
 
+app.put('/categories/:id', async (req, res) => {
+  const { name } = req.body;
+  const { data, error } = await supabase
+  .from('categories')
+  .update({ name })
+  .eq('id', req.params.id)
+  .select();
+
+  if (error)
+    return res.status(400).json(error);
+  res.json(data);
+});
+
+app.delete('/categories/:id', async (req, res) => {
+  const { data, error } = await supabase
+  .from('categories')
+  .delete()
+  .eq('id', req.params.id)
+  .select('id');
+
+  if (error)
+    return res.status(400).json(error);
+  if (!data?.length)
+    return res.status(404).json({ message: "Barang tidak ditemukan" });
+  res.json(data);
+});
+
 app.get('/rooms', async (req, res) => {
   const { data } = await supabase
     .from('rooms')
@@ -63,6 +90,33 @@ app.post('/rooms', async (req, res) => {
     .insert([{ name: req.body.name }])
     .select();
   if (error) return res.status(400).json(error);
+  res.json(data);
+});
+
+app.put('/rooms/:id', async (req, res) => {
+  const { name } = req.body;
+  const { data, error } = await supabase
+  .from('rooms')
+  .update({ name })
+  .eq('id', req.params.id)
+  .select();
+
+  if (error)
+    return res.status(400).json(error);
+  res.json(data);
+});
+
+app.delete("/rooms/:id", async (req, res) => {
+  const { data, error } = await supabase
+  .from('rooms')
+  .delete()
+  .eq('id', req.params.id)
+  .select('id')
+
+  if (error)
+    return res.status(400).json(error);
+  if (!data?.length)
+    return res.status(404).json({ message: "Ruangan tidak ditemukan" });
   res.json(data);
 });
 
@@ -126,6 +180,8 @@ app.put('/assets/:id', async (req, res) => {
     .from('assets')
     .update({
       name,
+      asset_code,
+      serial_number,
       category_id: category_id || null,
       room_id: room_id || null,
       condition,
@@ -138,11 +194,13 @@ app.put('/assets/:id', async (req, res) => {
 });
 
 app.delete('/assets/:id', async (req, res) => {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('assets')
     .delete()
-    .eq('id', req.params.id);
+    .eq('id', req.params.id)
+    .select('id');
   if (error) return res.status(400).json(error);
+  if (!data?.length) return res.status(404).json({ message: 'Barang tidak ditemukan' });
   res.json({ message: 'Barang berhasil dihapus' });
 });
 

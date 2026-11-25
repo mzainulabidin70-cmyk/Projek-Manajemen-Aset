@@ -18,21 +18,26 @@ async function request(path, method = 'GET', data) {
 export default function Admin() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('assets');
+  const [masterTab, setMasterTab] = useState('categories');
   const [categories, setCategories] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loans, setLoans] = useState([]);
   const [editId, setEditId] = useState(null);
+  const [showAssetModal, setShowAssetModal] = useState(false);
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [roomId, setRoomId] = useState('');
   const [condition, setCondition] = useState('Bagus');
   const [newCat, setNewCat] = useState('');
   const [newRoom, setNewRoom] = useState('');
+  const [editCategoryId, setEditCategoryId] = useState(null);
+  const [editRoomId, setEditRoomId] = useState(null);
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userPass, setUserPass] = useState('');
   const [createdUserName, setCreatedUserName] = useState('');
+  const [createdAssetName, setCreatedAssetName] = useState('');
 
   const fetchData = async () => {
     const [resA, resC, resR, resL] = await Promise.all([
@@ -76,9 +81,12 @@ export default function Admin() {
     const method = editId ? 'PUT' : 'POST';
     const path = editId ? `/assets/${editId}` : '/assets';
 
-    await request(path, method, payload);
+    const response = await request(path, method, payload);
+    if (!response.ok) return;
 
+    if (!editId) setCreatedAssetName(name);
     resetForm();
+    setShowAssetModal(false);
     fetchData();
   };
 
@@ -88,6 +96,7 @@ export default function Admin() {
     setCategoryId(item.category_id || '');
     setRoomId(item.room_id || '');
     setCondition(item.condition);
+    setShowAssetModal(true);
   };
 
   const handleDeleteAsset = async (id) => {
@@ -98,15 +107,29 @@ export default function Admin() {
 
   const addCategory = async (e) => {
     e.preventDefault();
-    await request('/categories', 'POST', { name: newCat });
+    await request(editCategoryId ? `/categories/${editCategoryId}` : '/categories', editCategoryId ? 'PUT' : 'POST', { name: newCat });
     setNewCat('');
+    setEditCategoryId(null);
     fetchData();
   };
 
   const addRoom = async (e) => {
     e.preventDefault();
-    await request('/rooms', 'POST', { name: newRoom });
+    await request(editRoomId ? `/rooms/${editRoomId}` : '/rooms', editRoomId ? 'PUT' : 'POST', { name: newRoom });
     setNewRoom('');
+    setEditRoomId(null);
+    fetchData();
+  };
+
+  const deleteCategory = async (id) => {
+    if (!confirm('Hapus jenis barang ini?')) return;
+    await request(`/categories/${id}`, 'DELETE');
+    fetchData();
+  };
+
+  const deleteRoom = async (id) => {
+    if (!confirm('Hapus ruangan ini?')) return;
+    await request(`/rooms/${id}`, 'DELETE');
     fetchData();
   };
 
@@ -153,7 +176,7 @@ export default function Admin() {
           {[
             { id: 'assets', label: 'Daftar Barang' },
             { id: 'master', label: 'Data Awal' },
-            { id: 'loans', label: 'Check-out & Check-in' },
+            { id: 'loans', label: 'Peminjaman & Pengembalian' },
             { id: 'report', label: 'Laporan' },
           ].map((item) => (
             <button
@@ -183,54 +206,15 @@ export default function Admin() {
                   <h2 className="text-2xl font-bold text-slate-900">Daftar Barang</h2>
                   <p className="mt-1 text-sm text-slate-500">Kelola data aset beserta jenis, lokasi, dan kondisinya.</p>
                 </div>
-                <div className="hidden border-l-2 border-blue-600 pl-4 text-right sm:block">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Total barang</p>
-                  <p className="text-2xl font-bold text-slate-900">{assets.length}</p>
+                <div className="flex items-center gap-4">
+                  <div className="hidden border-l-2 border-blue-600 pl-4 text-right sm:block">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Total barang</p>
+                    <p className="text-2xl font-bold text-slate-900">{assets.length}</p>
+                  </div>
+                  <button type="button" onClick={() => { resetForm(); setShowAssetModal(true); }} className="border border-blue-700 bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800">Tambah Barang</button>
                 </div>
               </div>
             </header>
-
-            <section className="border border-slate-300 bg-white">
-              <div className="border-b border-slate-300 px-5 py-4">
-                <h3 className="font-bold text-slate-800">{editId ? 'Ubah Data Barang' : 'Tambah Barang Baru'}</h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  {editId ? 'Perbarui informasi barang yang dipilih.' : 'Lengkapi informasi berikut untuk menambahkan aset.'}
-                </p>
-              </div>
-              <form onSubmit={handleSaveAsset} className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-slate-700">Nama Barang</span>
-                  <input required placeholder="Contoh: Buku ...." value={name} onChange={(e) => setName(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-slate-700">Jenis Barang</span>
-                  <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
-                    <option value="">-- Pilih Jenis --</option>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-slate-700">Ruangan</span>
-                  <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
-                    <option value="">-- Pilih Ruangan --</option>
-                    {rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-slate-700">Kondisi</span>
-                  <select value={condition} onChange={(e) => setCondition(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
-                    <option value="Bagus">Bagus</option>
-                    <option value="Rusak">Rusak</option>
-                  </select>
-                </label>
-                <div className="flex gap-2 md:col-span-2 xl:col-span-4">
-                  <button type="submit" className="border border-blue-700 bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800">
-                    {editId ? 'Simpan Perubahan' : 'Tambah Barang'}
-                  </button>
-                  {editId && <button type="button" onClick={resetForm} className="border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">Batal</button>}
-                </div>
-              </form>
-            </section>
 
             <section className="border border-slate-300 bg-white">
               <div className="flex items-center justify-between border-b border-slate-300 px-5 py-4">
@@ -259,19 +243,19 @@ export default function Admin() {
                         <td className="border-r border-slate-200 px-5 py-4 text-slate-600">{a.category_name || '-'}</td>
                         <td className="border-r border-slate-200 px-5 py-4 text-slate-600">{a.room_name || '-'}</td>
                         <td className="border-r border-slate-200 px-5 py-4">
-                          <span className={`border px-2.5 py-1 text-xs font-semibold ${a.condition === 'Bagus' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+                          <span className="text-xs font-semibold text-slate-700">
                             {a.condition}
                           </span>
                         </td>
                         <td className="border-r border-slate-200 px-5 py-4">
-                          <span className={`border px-2.5 py-1 text-xs font-semibold ${a.status === 'Tersedia' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+                          <span className="text-xs font-semibold text-slate-700">
                             {a.status}
                           </span>
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex min-w-max gap-2">
-                            <button onClick={() => handleEditAsset(a)} className="border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-50">Ubah</button>
-                            <button onClick={() => handleDeleteAsset(a.id)} className="border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50">Hapus</button>
+                            <button onClick={() => handleEditAsset(a)} className="border border-amber-500 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-600">Edit</button>
+                            <button onClick={() => handleDeleteAsset(a.id)} className="border border-red-600 bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">Hapus</button>
                           </div>
                         </td>
                       </tr>
@@ -292,77 +276,93 @@ export default function Admin() {
 
         {tab === 'master' && (
           <div className="space-y-6">
-            <header className="rounded-lg border border-slate-200 bg-white p-5">
+            <header className="border border-slate-300 bg-white p-5">
               <p className="text-sm font-medium text-blue-700">Pengaturan inventaris</p>
               <h2 className="mt-1 text-2xl font-bold text-slate-900">Data Awal</h2>
-              <p className="mt-2 text-sm text-slate-600">Kelola jenis barang, ruangan, dan akun peminjam.</p>
+              <p className="mt-2 text-sm text-slate-600">Pilih satu menu untuk mengelola data inventaris.</p>
             </header>
 
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-              <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <div className="border-b border-slate-200 p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-blue-700">Master barang</p>
-                      <h3 className="mt-1 text-lg font-bold text-slate-800">Jenis Barang</h3>
-                    </div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{categories.length}</span>
-                  </div>
+            <nav className="flex flex-wrap gap-2 border-b border-slate-300" aria-label="Menu Data Awal">
+              {[
+                { id: 'categories', label: 'Jenis Barang' },
+                { id: 'rooms', label: 'Daftar Ruangan' },
+                { id: 'users', label: 'Buat Akun Peminjam' },
+              ].map((item) => (
+                <button key={item.id} onClick={() => setMasterTab(item.id)} className={`border-b-2 px-4 py-3 text-sm font-semibold transition ${masterTab === item.id ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+
+            {masterTab === 'categories' && (
+              <section className="border border-slate-300 bg-white">
+                <div className="flex items-center justify-between border-b border-slate-300 px-5 py-4">
+                  <div><p className="text-xs font-medium text-blue-700">Master barang</p><h3 className="mt-1 text-lg font-bold text-slate-800">Jenis Barang</h3></div>
+                  <span className="bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{categories.length} data</span>
                 </div>
                 <div className="space-y-4 p-5">
-                  <form onSubmit={addCategory} className="flex gap-2">
-                    <input required placeholder="Contoh: Buku" value={newCat} onChange={(e) => setNewCat(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Tambah</button>
+                  <form onSubmit={addCategory} className="flex flex-col gap-2 sm:flex-row">
+                    <input required placeholder="Contoh: Buku" value={newCat} onChange={(e) => setNewCat(e.target.value)} className="min-w-0 flex-1 border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+                    <button className="bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">{editCategoryId ? 'Simpan Perubahan' : 'Tambah Jenis'}</button>
+                    {editCategoryId && <button type="button" onClick={() => { setEditCategoryId(null); setNewCat(''); }} className="border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100">Batal</button>}
                   </form>
-                  <ul className="divide-y divide-slate-100">
+                  <ul className="divide-y divide-slate-200 border-y border-slate-200">
                     {categories.length ? categories.map((c) => (
-                      <li key={c.id} className="flex items-center gap-3 py-3 text-sm text-slate-700">
-                        <span className="h-2 w-2 rounded-full bg-blue-500" />{c.name}
+                      <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm text-slate-700">
+                        <span className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-blue-500" />{c.name}</span>
+                        <div className="flex gap-2">
+                          <button onClick={() => { setEditCategoryId(c.id); setNewCat(c.name); }} className="border border-amber-500 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Ubah</button>
+                          <button onClick={() => deleteCategory(c.id)} className="border border-red-600 bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">Hapus</button>
+                        </div>
                       </li>
-                    )) : <li className="py-4 text-center text-sm text-slate-400">Belum ada jenis barang.</li>}
+                    )) : <li className="py-8 text-center text-sm text-slate-400">Belum ada jenis barang.</li>}
                   </ul>
                 </div>
               </section>
+            )}
 
-              <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <div className="border-b border-slate-200 p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-blue-700">Lokasi aset</p>
-                      <h3 className="mt-1 text-lg font-bold text-slate-800">Daftar Ruangan</h3>
-                    </div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{rooms.length}</span>
-                  </div>
+            {masterTab === 'rooms' && (
+              <section className="border border-slate-300 bg-white">
+                <div className="flex items-center justify-between border-b border-slate-300 px-5 py-4">
+                  <div><p className="text-xs font-medium text-blue-700">Lokasi aset</p><h3 className="mt-1 text-lg font-bold text-slate-800">Daftar Ruangan</h3></div>
+                  <span className="bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{rooms.length} data</span>
                 </div>
                 <div className="space-y-4 p-5">
-                  <form onSubmit={addRoom} className="flex gap-2">
-                    <input required placeholder="Contoh: Ruang kelas 1" value={newRoom} onChange={(e) => setNewRoom(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Tambah</button>
+                  <form onSubmit={addRoom} className="flex flex-col gap-2 sm:flex-row">
+                    <input required placeholder="Contoh: Ruang kelas 1" value={newRoom} onChange={(e) => setNewRoom(e.target.value)} className="min-w-0 flex-1 border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+                    <button className="bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">{editRoomId ? 'Simpan Perubahan' : 'Tambah Ruangan'}</button>
+                    {editRoomId && <button type="button" onClick={() => { setEditRoomId(null); setNewRoom(''); }} className="border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100">Batal</button>}
                   </form>
-                  <ul className="divide-y divide-slate-100">
+                  <ul className="divide-y divide-slate-200 border-y border-slate-200">
                     {rooms.length ? rooms.map((r) => (
-                      <li key={r.id} className="flex items-center gap-3 py-3 text-sm text-slate-700">
-                        <span className="h-2 w-2 rounded-full bg-blue-500" />{r.name}
+                      <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm text-slate-700">
+                        <span className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-blue-500" />{r.name}</span>
+                        <div className="flex gap-2">
+                          <button onClick={() => { setEditRoomId(r.id); setNewRoom(r.name); }} className="border border-amber-500 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Ubah</button>
+                          <button onClick={() => deleteRoom(r.id)} className="border border-red-600 bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">Hapus</button>
+                        </div>
                       </li>
-                    )) : <li className="py-4 text-center text-sm text-slate-400">Belum ada ruangan.</li>}
+                    )) : <li className="py-8 text-center text-sm text-slate-400">Belum ada ruangan.</li>}
                   </ul>
                 </div>
               </section>
+            )}
 
-              <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <div className="border-b border-slate-200 p-5">
+            {masterTab === 'users' && (
+              <section className="max-w-2xl border border-slate-300 bg-white">
+                <div className="border-b border-slate-300 p-5">
                   <p className="text-xs font-medium text-blue-700">Akses pengguna</p>
                   <h3 className="mt-1 text-lg font-bold text-slate-800">Buat Akun Peminjam</h3>
                   <p className="mt-1 text-sm text-slate-500">Tambahkan akun untuk siswa atau siswi.</p>
                 </div>
                 <form onSubmit={addUser} className="space-y-3 p-5">
-                  <input required placeholder="Nama Siswa/Siswi" value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-                  <input required type="email" placeholder="Email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-                  <input required placeholder="Password" value={userPass} onChange={(e) => setUserPass(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-                  <button className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">Simpan Akun</button>
+                  <input required placeholder="Nama Siswa/Siswi" value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+                  <input required type="email" placeholder="Email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+                  <input required placeholder="Password" value={userPass} onChange={(e) => setUserPass(e.target.value)} className="w-full border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+                  <button className="bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">Simpan Akun</button>
                 </form>
               </section>
-            </div>
+            )}
           </div>
         )}
 
@@ -372,8 +372,8 @@ export default function Admin() {
               <p className="text-sm font-medium text-slate-500">Peminjaman barang</p>
               <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Check-out &amp; Check-in</h2>
-                  <p className="mt-1 text-sm text-slate-500">Setujui permintaan yang masuk, lalu catat kondisi barang saat dikembalikan.</p>
+                  <h2 className="text-2xl font-bold text-slate-900">Peminjaman &amp; Pengembalian</h2>
+                  <p className="mt-1 text-sm text-slate-500">Setujui permintaan peminjaman, lalu catat kondisi barang saat dikembalikan.</p>
                 </div>
                 <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
                   {loans.filter((l) => l.status !== 'Dikembalikan').length} transaksi aktif
@@ -428,16 +428,16 @@ export default function Admin() {
                           <div className="flex min-w-max flex-wrap gap-2">
                             {l.status === 'Menunggu' && (
                               <button onClick={() => handleCheckout(l)} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                                Setujui check-out
+                                Setujui Peminjaman
                               </button>
                             )}
                             {l.status === 'Disetujui' && (
                               <>
                                 <button onClick={() => handleCheckin(l, 'Bagus')} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300">
-                                  Kembali: Bagus
+                                  Catat Pengembalian: Bagus
                                 </button>
                                 <button onClick={() => handleCheckin(l, 'Rusak')} className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
-                                  Kembali: Rusak
+                                  Catat Pengembalian: Rusak
                                 </button>
                               </>
                             )}
@@ -495,7 +495,7 @@ export default function Admin() {
               <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                 <div>
                   <h3 className="font-bold text-slate-800">Daftar riwayat peminjaman</h3>
-                  <p class="mt-1 text-sm text-slate-500">{loans.length} transaksi tercatat</p>
+                  <p className="mt-1 text-sm text-slate-500">{loans.length} transaksi tercatat</p>
                 </div>
               </div>
               <div className="overflow-x-auto">
@@ -528,7 +528,7 @@ export default function Admin() {
                       <tr>
                         <td colSpan="6" className="px-5 py-12 text-center">
                           <p className="font-semibold text-slate-700">Belum ada riwayat peminjaman</p>
-                          <p class="mt-1 text-sm text-slate-500">Data transaksi akan tampil di sini setelah peminjaman dibuat.</p>
+                          <p className="mt-1 text-sm text-slate-500">Data transaksi akan tampil di sini setelah peminjaman dibuat.</p>
                         </td>
                       </tr>
                     )}
@@ -540,6 +540,51 @@ export default function Admin() {
         )}
       </div>
       </main>
+
+      {showAssetModal && (
+        <div onClick={() => { setShowAssetModal(false); resetForm(); }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <section onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl border border-slate-300 bg-white shadow-xl">
+            <div className="flex items-start justify-between border-b border-slate-300 px-5 py-4">
+              <div>
+                <h3 className="font-bold text-slate-800">{editId ? 'Ubah Data Barang' : 'Tambah Barang Baru'}</h3>
+                <p className="mt-1 text-sm text-slate-500">{editId ? 'Perbarui informasi barang yang dipilih.' : 'Lengkapi informasi berikut untuk menambahkan aset.'}</p>
+              </div>
+              <button type="button" aria-label="Tutup" onClick={() => { setShowAssetModal(false); resetForm(); }} className="text-xl leading-none text-slate-500 hover:text-slate-800">&times;</button>
+            </div>
+            <form onSubmit={handleSaveAsset} className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Nama Barang</span>
+                <input required placeholder="Contoh: Buku ...." value={name} onChange={(e) => setName(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Jenis Barang</span>
+                <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
+                  <option value="">-- Pilih Jenis --</option>
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Ruangan</span>
+                <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
+                  <option value="">-- Pilih Ruangan --</option>
+                  {rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Kondisi</span>
+                <select value={condition} onChange={(e) => setCondition(e.target.value)} className="h-11 w-full border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
+                  <option value="Bagus">Bagus</option>
+                  <option value="Rusak">Rusak</option>
+                </select>
+              </label>
+              <div className="flex justify-end gap-2 sm:col-span-2">
+                <button type="button" onClick={() => { setShowAssetModal(false); resetForm(); }} className="border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">Batal</button>
+                <button type="submit" className="border border-blue-700 bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800">{editId ? 'Simpan Perubahan' : 'Tambah Barang'}</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
 
       {createdUserName && (
         <div
@@ -553,6 +598,19 @@ export default function Admin() {
             <h2 className="mb-2 text-lg font-bold">Akun Berhasil Dibuat</h2>
             <p>Akun peminjam {createdUserName} berhasil ditambahkan.</p>
             <p className="mt-3 text-sm text-gray-500">Klik di luar pop-up untuk menutup.</p>
+          </div>
+        </div>
+      )}
+      {createdAssetName && (
+        <div
+          onClick={() => setCreatedAssetName('')}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-xl"
+          >
+            <h2 className="text-lg font-bold">Barang Berhasil Ditambahkan</h2>
           </div>
         </div>
       )}
