@@ -50,20 +50,20 @@ export default function Login() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-blue-950/55" aria-hidden="true" />
-      <div className="relative z-10 grid min-h-[580px] w-full max-w-[1100px] -translate-x-2 grid-cols-1 overflow-hidden rounded-none border border-white/70 bg-white shadow-2xl md:-translate-x-4 md:grid-cols-[46%_54%]">
-        <section className="relative flex min-h-[220px] flex-col items-center justify-center overflow-hidden bg-blue-700 p-8 text-center text-white/90 sm:p-10 md:min-h-[580px]">
+      <div className="relative z-10 grid min-h-0 w-full max-w-[1100px] translate-x-0 grid-cols-1 overflow-hidden rounded-xl border border-white/70 bg-white shadow-2xl md:min-h-[580px] md:-translate-x-4 md:grid-cols-[46%_54%] md:rounded-none">
+        <section className="relative flex min-h-[170px] flex-col items-center justify-center overflow-hidden bg-blue-700 p-6 text-center text-white/90 sm:min-h-[220px] sm:p-10 md:min-h-[580px]">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-blue-700/15 to-sky-400/10" aria-hidden="true" />
-          <div className="absolute left-6 top-6 z-10 flex items-center gap-3 sm:left-8 sm:top-8">
-            <img src={logo} alt="Logo SMK Guna Cipta" className="h-12 w-12 rounded-none object-cover" />
-            <span className="text-left text-base font-bold tracking-wide sm:text-lg">SMK GUNA CIPTA</span>
+          <div className="absolute left-4 top-4 z-10 flex items-center gap-3 sm:left-8 sm:top-8">
+            <img src={logo} alt="Logo SMK Guna Cipta" className="h-10 w-10 rounded-none object-cover sm:h-12 sm:w-12" />
+            <span className="text-left text-sm font-bold tracking-wide sm:text-lg">SMK GUNA CIPTA</span>
           </div>
-          <h1 className="relative max-w-sm text-center text-2xl font-bold leading-tight sm:text-3xl">
+          <h1 className="relative max-w-sm text-center text-xl font-bold leading-tight sm:text-3xl">
             Sistem Informasi Manajemen Aset Sekolah
           </h1>
         </section>
 
-        <section className="flex flex-col justify-center bg-blue-50/95 px-7 py-9 sm:px-12 md:px-16">
-          <h2 className="mb-3 text-center text-2xl font-bold text-blue-900">
+        <section className="flex flex-col justify-center bg-blue-50/95 px-5 py-7 sm:px-12 sm:py-9 md:px-16">
+          <h2 className="mb-3 text-center text-xl font-bold text-blue-900 sm:text-2xl">
             Masuk Ke Manajemen Aset
           </h2>
           <div className="mx-auto mb-6 h-0.5 w-24 bg-black" aria-hidden="true" />
