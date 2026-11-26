@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 import sawah from "../assets/sawah.jpg";
 import logo from "../assets/gunacipta.jpg";
 
@@ -9,34 +10,34 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async (event) => {
+    event.preventDefault();
     setError('');
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const result = await response.json();
 
-      if (!res.ok) {
-        setError(data.message || 'Email atau password salah');
+      if (!response.ok) {
+        setError(result.message || 'Email atau password salah');
         return;
       }
 
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('user', JSON.stringify(result.user));
       setEmail('');
       setPassword('');
 
-      if (data.user.role === 'admin') {
+      if (result.user.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/user');
       }
-    } catch (err) {
+    } catch {
       setError('Gagal terhubung ke server');
     }
   };
@@ -84,7 +85,7 @@ export default function Login() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="kepalasekolah@email.com"
                 className="mt-2 w-full rounded-none border border-blue-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
@@ -96,7 +97,7 @@ export default function Login() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="******"
                 className="mt-2 w-full rounded-none border border-blue-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />

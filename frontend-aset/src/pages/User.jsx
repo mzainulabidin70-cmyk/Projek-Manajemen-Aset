@@ -1,7 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
+const PENDING_LOAN_STATUSES = ['Menunggu', 'Menunggu Persetujuan', 'Pending'];
 
-const API_URL = import.meta.env.VITE_API_URL;
+function getLoanStatusClass(status) {
+  if (status === 'Disetujui') {
+    return 'border-green-200 bg-green-50 text-green-800';
+  }
+  if (status === 'Ditolak') {
+    return 'border-red-200 bg-red-50 text-red-700';
+  }
+  return 'border-amber-200 bg-amber-50 text-amber-800';
+}
 
 export default function User() {
   const navigate = useNavigate();
@@ -21,17 +31,17 @@ export default function User() {
 
   // Mengambil daftar barang tersedia dan riwayat pinjaman pengguna.
   const fetchData = async (userId) => {
-    const [resA, resL] = await Promise.all([
+    const [assetsResponse, loansResponse] = await Promise.all([
       fetch(`${API_URL}/assets`),
       fetch(`${API_URL}/loans`),
     ]);
 
-    const allAssets = await resA.json();
-    const allLoans = await resL.json();
+    const allAssets = await assetsResponse.json();
+    const allLoans = await loansResponse.json();
 
-    setAssets(allAssets.filter((a) => a.status === 'Tersedia' && a.condition === 'Bagus'));
+    setAssets(allAssets.filter((asset) => asset.status === 'Tersedia' && asset.condition === 'Bagus'));
 
-    setMyLoans(allLoans.filter((l) => l.user_id === userId));
+    setMyLoans(allLoans.filter((loan) => loan.user_id === userId));
   };
 
   // Memeriksa apakah barang sudah diajukan oleh pengguna.
@@ -53,7 +63,7 @@ export default function User() {
   const handleBorrow = async (assetId) => {
     if (borrowingLock.current.has(assetId) || hasLoanForAsset(assetId)) return;
     borrowingLock.current.add(assetId);
-    setBorrowingAssets(a => [...a, assetId]);
+    setBorrowingAssets((currentAssets) => [...currentAssets, assetId]);
     try {
       const res = await fetch(`${API_URL}/loans`, {
         method: 'POST',
@@ -65,7 +75,7 @@ export default function User() {
       await fetchData(user.id);
     } finally {
       borrowingLock.current.delete(assetId);
-      setBorrowingAssets(a => a.filter(id => id !== assetId));
+      setBorrowingAssets((currentAssets) => currentAssets.filter((id) => id !== assetId));
     }
   };
 
@@ -75,7 +85,7 @@ export default function User() {
     const note = prompt('Tuliskan keterangan kerusakan barang:');
     if (!note) return;
     reportingLock.current.add(loanId);
-    setReportingLoans(a => [...a, loanId]);
+    setReportingLoans((currentLoans) => [...currentLoans, loanId]);
     try {
       await fetch(`${API_URL}/loans/${loanId}/damage`, {
         method: 'PUT',
@@ -86,7 +96,7 @@ export default function User() {
       await fetchData(user.id);
     } finally {
       reportingLock.current.delete(loanId);
-      setReportingLoans(a => a.filter(id => id !== loanId));
+      setReportingLoans((currentLoans) => currentLoans.filter((id) => id !== loanId));
     }
   };
 
@@ -94,7 +104,7 @@ export default function User() {
   const handleCancelLoan = async (loanId) => {
     if (deletingLock.current.has(loanId)) return;
     deletingLock.current.add(loanId);
-    setDeletingLoans(a => [...a, loanId]);
+    setDeletingLoans((currentLoans) => [...currentLoans, loanId]);
     try {
       const res = await fetch(`${API_URL}/loans/${loanId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
@@ -104,7 +114,7 @@ export default function User() {
       setCancelError(e.message || 'Gagal membatalkan pengajuan pinjam.');
     } finally {
       deletingLock.current.delete(loanId);
-      setDeletingLoans(a => a.filter(id => id !== loanId));
+      setDeletingLoans((currentLoans) => currentLoans.filter((id) => id !== loanId));
     }
   };
 
@@ -115,8 +125,9 @@ export default function User() {
   };
 
   // Menampilkan barang sesuai kata pencarian.
-  const filteredAssets = assets.filter(asset =>
-    asset.name?.toLowerCase().includes(assetInitial.trim().toLowerCase())
+  const searchText = assetInitial.trim().toLowerCase();
+  const filteredAssets = assets.filter((asset) =>
+    asset.name?.toLowerCase().includes(searchText)
   );
 
   return (
@@ -175,22 +186,22 @@ export default function User() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAssets.map((a) => (
-                  <tr key={a.id} className="border-t border-stone-300 hover:bg-stone-50">
-                    <td className="px-4 py-3.5 font-medium text-gray-800">{a.name}</td>
-                    <td className="px-4 py-3.5 text-gray-600">{a.category_name || '-'}</td>
-                    <td className="px-4 py-3.5 text-gray-600">{a.room_name || '-'}</td>
+                {filteredAssets.map((asset) => (
+                  <tr key={asset.id} className="border-t border-stone-300 hover:bg-stone-50">
+                    <td className="px-4 py-3.5 font-medium text-gray-800">{asset.name}</td>
+                    <td className="px-4 py-3.5 text-gray-600">{asset.category_name || '-'}</td>
+                    <td className="px-4 py-3.5 text-gray-600">{asset.room_name || '-'}</td>
                     <td className="whitespace-nowrap px-4 py-3.5">
                       <button
-                        onClick={() => handleBorrow(a.id)}
+                        onClick={() => handleBorrow(asset.id)}
                         disabled={
-                          borrowingAssets.includes(a.id) || hasLoanForAsset(a.id)
+                          borrowingAssets.includes(asset.id) || hasLoanForAsset(asset.id)
                         }
                         className="bg-green-800 px-3.5 py-2 text-sm font-medium text-white hover:bg-green-900 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
                       >
-                        {borrowingAssets.includes(a.id)
+                        {borrowingAssets.includes(asset.id)
                           ? 'Mengirim...'
-                          : hasLoanForAsset(a.id)
+                          : hasLoanForAsset(asset.id)
                             ? 'Sudah Diajukan'
                             : 'Ajukan Pinjam'}
                       </button>
@@ -234,38 +245,38 @@ export default function User() {
                 </tr>
               </thead>
               <tbody>
-                {myLoans.map((l) => (
-                  <tr key={l.id} className="border-t border-stone-300 hover:bg-stone-50">
+                {myLoans.map((loan) => (
+                  <tr key={loan.id} className="border-t border-stone-300 hover:bg-stone-50">
                     <td className="px-4 py-3.5 font-medium text-gray-800">
-                      {l.asset_name}
+                      {loan.asset_name}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3.5 text-gray-600">{new Date(l.borrow_date).toLocaleDateString('id-ID')}</td>
+                    <td className="whitespace-nowrap px-4 py-3.5 text-gray-600">{new Date(loan.borrow_date).toLocaleDateString('id-ID')}</td>
                     <td className="px-4 py-3.5">
-                      <span className={`inline-block border px-2.5 py-1 text-xs font-medium ${l.status === 'Disetujui' ? 'border-green-200 bg-green-50 text-green-800' : (l.status === 'Ditolak' ? 'border-red-200 bg-red-50 text-red-700' : 'border-amber-200 bg-amber-50 text-amber-800')}`}>
-                        {l.status}
+                      <span className={`inline-block border px-2.5 py-1 text-xs font-medium ${getLoanStatusClass(loan.status)}`}>
+                        {loan.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-gray-600">{l.damage_report || '-'}</td>
+                    <td className="px-4 py-3.5 text-gray-600">{loan.damage_report || '-'}</td>
                     <td className="whitespace-nowrap px-4 py-3.5">
-                      {l.status === 'Disetujui' && (
+                      {loan.status === 'Disetujui' && (
                         <button
-                          onClick={() => handleReportDamage(l.id)}
-                          disabled={reportingLoans.includes(l.id)}
+                          onClick={() => handleReportDamage(loan.id)}
+                          disabled={reportingLoans.includes(loan.id)}
                           className="border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-800 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {reportingLoans.includes(l.id) ? 'Mengirim...' : 'Lapor Rusak'}
+                          {reportingLoans.includes(loan.id) ? 'Mengirim...' : 'Lapor Rusak'}
                         </button>
                       )}
-                      {(l.status === 'Menunggu' || l.status === 'Menunggu Persetujuan' || l.status === 'Pending') && (
+                      {PENDING_LOAN_STATUSES.includes(loan.status) && (
                         <button
                           onClick={() => {
-                            setLoanToCancel(l);
+                            setLoanToCancel(loan);
                             setCancelError('');
                           }}
-                          disabled={deletingLoans.includes(l.id)}
+                          disabled={deletingLoans.includes(loan.id)}
                           className="ml-2 border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {deletingLoans.includes(l.id) ? 'Menghapus...' : 'Batalkan'}
+                          {deletingLoans.includes(loan.id) ? 'Menghapus...' : 'Batalkan'}
                         </button>
                       )}
                     </td>

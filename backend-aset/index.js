@@ -130,6 +130,27 @@ app.post('/users', async (req, res) => {
   res.json(data);
 });
 
+app.get('/users', async (req, res) => {
+  const { data, error } = await supabase
+  .from('users')
+  .select('id, name, email, role')
+  .order('id', { ascending: true });
+
+  if (error)
+    return res.status(400).json(error);
+  res.json(data || []);
+});
+
+app.get('/user', async (req, res) => {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .order('id', { ascending: true });
+
+  if (error) return res.status(400).json(error);
+  res.json(data || []);
+});
+
 app.get('/assets', async (req, res) => {
   const { data: assets, error } = await supabase
     .from('assets')
