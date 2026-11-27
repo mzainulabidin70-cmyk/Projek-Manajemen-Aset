@@ -59,7 +59,7 @@ export default function Login() {
         </div>
       </header>
 
-      <div className="relative z-10 grid min-h-0 w-full max-w-[480px] translate-x-0 grid-cols-1 overflow-hidden rounded-xl border border-white/70 bg-white shadow-2xl md:max-w-[1100px] md:min-h-[580px] md:-translate-x-4 md:grid-cols-[46%_54%] md:rounded-none">
+      <div className="relative z-10 my-auto grid min-h-0 w-full max-w-[480px] translate-x-0 grid-cols-1 overflow-hidden rounded-xl border border-white/70 bg-white shadow-2xl md:my-0 md:max-w-[1100px] md:min-h-[580px] md:-translate-x-4 md:grid-cols-[46%_54%] md:rounded-none">
         <section className="relative hidden min-h-[220px] flex-col items-center justify-center overflow-hidden bg-blue-700 px-5 pb-7 pt-24 text-center text-white/90 md:flex md:min-h-[580px] md:p-10">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-blue-700/15 to-sky-400/10" aria-hidden="true" />
           <div className="absolute left-1/2 top-5 z-10 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap md:left-8 md:top-8 md:translate-x-0">
