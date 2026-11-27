@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import MobileMenuButton from './MobileMenuButton';
 
 const menuItems = [
   {
@@ -39,14 +41,19 @@ const roleLabels = {
 };
 
 export default function AdminSidebar({ tab, currentUser, onLogout }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <aside className="flex w-full shrink-0 flex-col bg-blue-800 text-white print:hidden md:min-h-screen md:w-64">
-      <h1 className="flex items-center justify-between border-b border-white px-4 py-3 text-lg font-bold md:block md:p-5 md:text-xl">
-        Dashboard
-        <button onClick={onLogout} className="rounded bg-red-500 px-3 py-1.5 text-xs font-medium hover:bg-red-600 md:hidden">
-          Keluar
-        </button>
-      </h1>
+      <div className="flex items-center justify-between border-b border-blue-700 px-4 py-3 md:block md:border-blue-600 md:p-5">
+        <h1 className="text-lg font-bold md:text-xl">Dashboard</h1>
+        <div className="flex items-center gap-2 md:hidden">
+          <MobileMenuButton isOpen={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)} />
+          <button onClick={onLogout} className="rounded bg-red-500 px-3 py-1.5 text-xs font-medium hover:bg-red-600">
+            Keluar
+          </button>
+        </div>
+      </div>
       {currentUser && (
         <div className="border-b border-blue-700 px-4 py-3 text-sm md:px-5">
           <p className="font-semibold">{currentUser.name || currentUser.email}</p>
@@ -55,11 +62,16 @@ export default function AdminSidebar({ tab, currentUser, onLogout }) {
           </p>
         </div>
       )}
-      <nav className="grid grid-cols-2 gap-2 p-3 md:block md:flex-1 md:space-y-1 md:p-3" aria-label="Menu admin">
+      <nav
+        id="admin-sidebar-menu"
+        className={`${isMenuOpen ? 'block' : 'hidden'} space-y-1 p-3 md:block md:flex-1`}
+        aria-label="Menu admin"
+      >
         {menuItems.map((item) => (
           <Link
             key={item.id}
             to={item.path}
+            onClick={() => setIsMenuOpen(false)}
             aria-current={tab === item.id ? 'page' : undefined}
             className={`flex min-h-12 w-full items-center gap-3 rounded px-3 py-2.5 text-left text-xs font-medium leading-snug sm:text-sm md:min-h-0 md:px-4 md:py-3 md:text-base ${
               tab === item.id ? 'bg-blue-600 text-white' : 'text-blue-100 hover:bg-blue-700 hover:text-white'
