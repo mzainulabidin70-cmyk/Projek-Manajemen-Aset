@@ -43,7 +43,7 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col items-center justify-center gap-1 overflow-hidden p-3 sm:p-5">
+    <div className="relative flex min-h-[100svh] flex-col items-center justify-start gap-1 overflow-hidden p-3 sm:p-5 md:justify-center">
       <img
         src={sawah}
         alt=""
@@ -51,7 +51,7 @@ export default function Login() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-blue-950/55" aria-hidden="true" />
-      <header className="relative z-10 flex w-full max-w-[480px] items-center justify-center gap-3 text-white md:hidden">
+      <header className="relative z-10 flex w-full max-w-[480px] items-center justify-start gap-3 text-white md:hidden">
         <img src={logo} alt="Logo SMK Guna Cipta" className="h-12 w-12 shrink-0 object-cover" />
         <div>
           <h1 className="text-sm font-bold tracking-wide">SMK GUNA CIPTA</h1>
